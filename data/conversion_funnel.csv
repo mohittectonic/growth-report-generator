@@ -1,0 +1,6 @@
+Metrics,Drop off Rate (%),WoW Change (%),MoM Change (%)
+Total Sessions,100.0,0.0,0.0
+Sessions → Product Views,82.29,0.48,0.41
+Product Views → Add to Carts,9.04,0.35,14.24
+Add to Carts → Checkout Initiated,47.81,2.44,-14.3
+Checkout Initiated → Completed Purchase,40.29,1.16,-6.2
