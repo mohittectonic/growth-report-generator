@@ -2,34 +2,26 @@ import React, { useState, useEffect } from "react";
 import ReportSection from "../components/ReportSection";
 import TwoColumnLayout from "../components/TwoColumnLayout";
 import PieChartComponent from "../components/charts/PieChartComponent";
-import BarChartComponent from "../components/charts/BarChartComponent";
+import ComparisonBarChart from "../components/charts/ComparisonBarChart";
 import InsightsBox from "../components/InsightsBox";
 import { colors } from "../utils/colors";
+import { formatNumber } from "../utils/formatters";
 import dataService from "../data/dataService";
 import { getGroupedInsightsFromCSV } from "../utils/csvParser";
 
 const DevicePlatformSection = () => {
+  const [deviceData, setDeviceData] = useState([]);
   const [platformData, setPlatformData] = useState([]);
-  const [deviceChartData, setDeviceChartData] = useState([]);
   const [insights, setInsights] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Load device data from os_funnel.csv
-        const osData = await dataService.getDeviceData();
-        // Filter to include only top devices and set up chart data
-        const topDevices = osData
-          .filter((item) => item.share >= 1)
-          .map((item) => ({
-            name: item.device,
-            value: item.share,
-          }));
-        setDeviceChartData(topDevices);
-        // Load platform data from event_source.csv
-        const eventSourceData = await dataService.getPlatformData();
-        setPlatformData(eventSourceData);
+        const device = await dataService.getDeviceData();
+        setDeviceData(device);
+        const platform = await dataService.getPlatformData();
+        setPlatformData(platform);
         const grouped = await getGroupedInsightsFromCSV();
         setInsights(grouped.device || []);
       } catch (error) {
@@ -42,33 +34,40 @@ const DevicePlatformSection = () => {
   }, []);
 
   return (
-    <ReportSection number="5" title="Device & Platform Analysis">
+    <ReportSection number="5" title="Device & Platform Insights">
       {loading ? (
         <div className="text-center py-4">Loading data...</div>
       ) : (
-        <TwoColumnLayout
-          leftTitle="Sessions by Device Type"
-          leftContent={
-            <PieChartComponent
-              data={deviceChartData}
-              dataKey="value"
-              nameKey="name"
-              colors={colors.chartColors}
-            />
-          }
-          rightTitle="Platform Performance"
-          rightContent={
-            <BarChartComponent
-              data={platformData}
-              xAxisKey="platform"
-              yAxisKey="conversion"
-              barColor={colors.secondary}
-              customTooltip={(value) => [`${value.toFixed(2)}%`, "Conversion"]}
-            />
-          }
-        />
+        <>
+          <TwoColumnLayout
+            leftTitle="Device Distribution"
+            leftContent={
+              <PieChartComponent
+                data={deviceData}
+                dataKey="share"
+                nameKey="device"
+                colors={colors.chartColors}
+                formatNumber={formatNumber}
+              />
+            }
+            rightTitle="Platform Comparison"
+            rightContent={
+              <ComparisonBarChart
+                data={platformData}
+                xAxisKey="platform"
+                colors={[colors.primary, colors.secondary]}
+                bars={[
+                  { id: "left", orientation: "left", dataKey: "conversion", name: "Conversion Rate (%)" },
+                  { id: "right", orientation: "right", dataKey: "rps", name: "Revenue per Session (₹)" }
+                ]}
+              />
+            }
+          />
+          <div className="mt-4">
+            <InsightsBox title="Device & Platform Insights" insights={insights} />
+          </div>
+        </>
       )}
-      <InsightsBox title="Device & Platform Insights" insights={insights} />
     </ReportSection>
   );
 };

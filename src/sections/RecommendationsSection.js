@@ -10,7 +10,12 @@ const RecommendationsSection = () => {
     const loadData = async () => {
       try {
         const grouped = await getGroupedInsightsFromCSV();
-        setRecommendations(grouped.recommendation || []);
+        // Add an id for each recommendation (1-based)
+        const recs = (grouped.recommendation || []).map((rec, idx) => ({
+          ...rec,
+          id: idx + 1,
+        }));
+        setRecommendations(recs);
       } catch (error) {
         console.error("Error loading recommendations:", error);
       } finally {
@@ -22,22 +27,22 @@ const RecommendationsSection = () => {
 
   return (
     <ReportSection number="6" title="Recommendations">
-      {loading ? (
-        <div className="text-center py-4">Loading recommendations...</div>
-      ) : (
-        <ul className="list-disc pl-6 space-y-2">
-          {recommendations.map((rec, idx) => (
-            <li
-              key={idx}
-              className={
-                rec.positive === false ? "text-red-600" : "text-green-700"
-              }
-            >
-              {rec.text}
-            </li>
-          ))}
-        </ul>
-      )}
+      <div className="bg-white p-4 rounded-lg shadow">
+        {loading ? (
+          <div className="text-center py-4">Loading recommendations...</div>
+        ) : (
+          <ul className="space-y-3">
+            {recommendations.map((rec) => (
+              <li key={rec.id} className="flex items-start">
+                <span className="bg-indigo-100 text-indigo-800 w-6 h-6 rounded-full inline-flex items-center justify-center flex-shrink-0 mr-2">
+                  {rec.id}
+                </span>
+                <span>{rec.text}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </ReportSection>
   );
 };
