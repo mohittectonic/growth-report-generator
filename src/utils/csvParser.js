@@ -128,3 +128,22 @@ function formatValue(value) {
   }
   return value;
 }
+
+/**
+ * Fetch and group insights from CSV by section
+ * @returns {Promise<Object>} - { executive: [...], funnel: [...], ... }
+ */
+export const getGroupedInsightsFromCSV = async () => {
+  const data = await parseCSV("/data/insights_data.csv");
+  // Group by section
+  const grouped = {};
+  data.forEach((row) => {
+    const section = row.section.trim();
+    if (!grouped[section]) grouped[section] = [];
+    grouped[section].push({
+      positive: row.type.trim() === "positive",
+      text: row.text.trim(),
+    });
+  });
+  return grouped;
+};
