@@ -7,16 +7,22 @@ const getDropoffColor = (value) => {
   return colors.neutral;
 };
 
+// Calculate remaining % at each step from the original cohort
+function getFunnelSteps(data) {
+  if (!data || data.length === 0) return [];
+  let steps = [];
+  let remaining = 100;
+  steps.push({ ...data[0], remaining });
+  for (let i = 1; i < data.length; i++) {
+    // Each value is the % of previous step, so multiply down the chain
+    remaining = remaining * (data[i].value / 100);
+    steps.push({ ...data[i], remaining });
+  }
+  return steps;
+}
+
 const AmplitudeFunnelChart = ({ data }) => {
-  // Calculate drop-off between steps
-  const steps = data.map((step, idx) => {
-    const next = data[idx + 1];
-    let dropoff = null;
-    if (next) {
-      dropoff = step.value - next.value;
-    }
-    return { ...step, dropoff };
-  });
+  const steps = getFunnelSteps(data);
 
   return (
     <div className="w-full overflow-x-auto">
@@ -25,19 +31,19 @@ const AmplitudeFunnelChart = ({ data }) => {
           <React.Fragment key={step.stage}>
             <div className="flex flex-col items-center min-w-[120px]">
               <div
-                className="rounded-t-lg shadow-md flex items-end justify-center"
+                className="rounded-t-lg shadow-md flex items-end justify-center transition-all duration-300"
                 style={{
                   background:
                     colors.chartColors[idx % colors.chartColors.length],
                   width: 80,
-                  height: 80 + step.value * 1.2, // visually scale height
-                  minHeight: 60,
+                  height: 2 * step.remaining + 40, // visually scale height
+                  minHeight: 40,
                   color: "#fff",
                   fontWeight: 600,
                   fontSize: 18,
                 }}
               >
-                <span>{step.value.toFixed(2)}%</span>
+                <span>{step.remaining.toFixed(2)}%</span>
               </div>
               <div className="mt-2 text-sm font-medium text-gray-700 text-center">
                 {step.stage}
@@ -57,10 +63,17 @@ const AmplitudeFunnelChart = ({ data }) => {
                 <div
                   className="text-xs font-semibold mt-1"
                   style={{
-                    color: getDropoffColor(steps[idx + 1].value - step.value),
+                    color: getDropoffColor(
+                      steps[idx + 1].remaining - step.remaining
+                    ),
                   }}
                 >
-                  {Math.abs(step.dropoff).toFixed(2)}% drop
+                  {Math.abs(
+                    ((step.remaining - steps[idx + 1].remaining) /
+                      step.remaining) *
+                      100
+                  ).toFixed(2)}
+                  % drop
                 </div>
               </div>
             )}
