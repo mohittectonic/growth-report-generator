@@ -4,13 +4,14 @@ import TwoColumnLayout from "../components/TwoColumnLayout";
 import PieChartComponent from "../components/charts/PieChartComponent";
 import BarChartComponent from "../components/charts/BarChartComponent";
 import InsightsBox from "../components/InsightsBox";
-import { deviceInsights } from "../data/insightsData";
 import { colors } from "../utils/colors";
 import dataService from "../data/dataService";
+import { getGroupedInsightsFromCSV } from "../utils/csvParser";
 
 const DevicePlatformSection = () => {
   const [platformData, setPlatformData] = useState([]);
   const [deviceChartData, setDeviceChartData] = useState([]);
+  const [insights, setInsights] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,26 +19,25 @@ const DevicePlatformSection = () => {
       try {
         // Load device data from os_funnel.csv
         const osData = await dataService.getDeviceData();
-
         // Filter to include only top devices and set up chart data
         const topDevices = osData
-          .filter((item) => item.share >= 1) // Only include devices with >= 1% share
+          .filter((item) => item.share >= 1)
           .map((item) => ({
             name: item.device,
             value: item.share,
           }));
         setDeviceChartData(topDevices);
-
         // Load platform data from event_source.csv
         const eventSourceData = await dataService.getPlatformData();
         setPlatformData(eventSourceData);
+        const grouped = await getGroupedInsightsFromCSV();
+        setInsights(grouped.device || []);
       } catch (error) {
         console.error("Error loading device/platform data:", error);
       } finally {
         setLoading(false);
       }
     };
-
     loadData();
   }, []);
 
@@ -68,10 +68,7 @@ const DevicePlatformSection = () => {
           }
         />
       )}
-      <InsightsBox
-        title="Device & Platform Insights"
-        insights={deviceInsights}
-      />
+      <InsightsBox title="Device & Platform Insights" insights={insights} />
     </ReportSection>
   );
 };

@@ -2,12 +2,13 @@ import React, { useState, useEffect } from "react";
 import ReportSection from "../components/ReportSection";
 import AmplitudeFunnelChart from "../components/charts/AmplitudeFunnelChart";
 import InsightsBox from "../components/InsightsBox";
-import { funnelInsights } from "../data/insightsData";
 import { colors } from "../utils/colors";
 import dataService from "../data/dataService";
+import { getGroupedInsightsFromCSV } from "../utils/csvParser";
 
 const ConversionFunnelSection = () => {
   const [data, setData] = useState([]);
+  const [insights, setInsights] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -15,6 +16,8 @@ const ConversionFunnelSection = () => {
       try {
         const conversionData = await dataService.getConversionFunnelData();
         setData(conversionData);
+        const grouped = await getGroupedInsightsFromCSV();
+        setInsights(grouped.funnel || []);
       } catch (error) {
         console.error("Error loading conversion funnel data:", error);
       } finally {
@@ -35,7 +38,7 @@ const ConversionFunnelSection = () => {
           <AmplitudeFunnelChart data={data} />
         )}
       </div>
-      <InsightsBox title="Conversion Insights" insights={funnelInsights} />
+      <InsightsBox title="Conversion Insights" insights={insights} />
     </ReportSection>
   );
 };

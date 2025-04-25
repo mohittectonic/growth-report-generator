@@ -5,13 +5,14 @@ import DataTable from "../components/DataTable";
 import PieChartComponent from "../components/charts/PieChartComponent";
 import InsightsBox from "../components/InsightsBox";
 import { categoryColumns } from "../data/columnDefinitions";
-import { categoryInsights } from "../data/insightsData";
 import { colors } from "../utils/colors";
 import dataService from "../data/dataService";
+import { getGroupedInsightsFromCSV } from "../utils/csvParser";
 
 const ProductCategorySection = () => {
   const [data, setData] = useState([]);
   const [pieChartData, setPieChartData] = useState([]);
+  const [insights, setInsights] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,14 +20,14 @@ const ProductCategorySection = () => {
       try {
         const categoryData = await dataService.getCategoryData();
         setData(categoryData);
-
-        // Prepare data for pie chart
         setPieChartData(
           categoryData.map((item) => ({
             name: item.category,
             value: item.share,
           }))
         );
+        const grouped = await getGroupedInsightsFromCSV();
+        setInsights(grouped.category || []);
       } catch (error) {
         console.error("Error loading product category data:", error);
       } finally {
@@ -56,7 +57,7 @@ const ProductCategorySection = () => {
           rightContent={<DataTable columns={categoryColumns} data={data} />}
         />
       )}
-      <InsightsBox title="Category Insights" insights={categoryInsights} />
+      <InsightsBox title="Category Insights" insights={insights} />
     </ReportSection>
   );
 };

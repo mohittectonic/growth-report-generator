@@ -5,13 +5,14 @@ import DataTable from "../components/DataTable";
 import PieChartComponent from "../components/charts/PieChartComponent";
 import InsightsBox from "../components/InsightsBox";
 import { channelColumns } from "../data/columnDefinitions";
-import { channelInsights } from "../data/insightsData";
 import { colors } from "../utils/colors";
 import dataService from "../data/dataService";
+import { getGroupedInsightsFromCSV } from "../utils/csvParser";
 
 const ChannelAnalysisSection = () => {
   const [data, setData] = useState([]);
   const [pieChartData, setPieChartData] = useState([]);
+  const [insights, setInsights] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,14 +20,14 @@ const ChannelAnalysisSection = () => {
       try {
         const utmSourceData = await dataService.getUtmSourceData();
         setData(utmSourceData);
-
-        // Prepare data for pie chart
         setPieChartData(
           utmSourceData.map((item) => ({
             name: item.source,
             value: item.share,
           }))
         );
+        const grouped = await getGroupedInsightsFromCSV();
+        setInsights(grouped.channel || []);
       } catch (error) {
         console.error("Error loading channel analysis data:", error);
       } finally {
@@ -56,7 +57,7 @@ const ChannelAnalysisSection = () => {
           rightContent={<DataTable columns={channelColumns} data={data} />}
         />
       )}
-      <InsightsBox title="Channel Insights" insights={channelInsights} />
+      <InsightsBox title="Channel Insights" insights={insights} />
     </ReportSection>
   );
 };

@@ -1,22 +1,43 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import ReportSection from "../components/ReportSection";
-import { recommendations } from "../data/insightsData";
+import { getGroupedInsightsFromCSV } from "../utils/csvParser";
 
 const RecommendationsSection = () => {
+  const [recommendations, setRecommendations] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const grouped = await getGroupedInsightsFromCSV();
+        setRecommendations(grouped.recommendation || []);
+      } catch (error) {
+        console.error("Error loading recommendations:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
   return (
     <ReportSection number="6" title="Recommendations">
-      <div className="bg-white p-6 rounded-lg shadow">
-        <ul className="space-y-4">
-          {recommendations.map((recommendation) => (
-            <li key={recommendation.id} className="flex">
-              <span className="inline-flex items-center justify-center bg-indigo-100 text-indigo-800 w-6 h-6 rounded-full mr-3 flex-shrink-0">
-                {recommendation.id}
-              </span>
-              <div>{recommendation.text}</div>
+      {loading ? (
+        <div className="text-center py-4">Loading recommendations...</div>
+      ) : (
+        <ul className="list-disc pl-6 space-y-2">
+          {recommendations.map((rec, idx) => (
+            <li
+              key={idx}
+              className={
+                rec.positive === false ? "text-red-600" : "text-green-700"
+              }
+            >
+              {rec.text}
             </li>
           ))}
         </ul>
-      </div>
+      )}
     </ReportSection>
   );
 };

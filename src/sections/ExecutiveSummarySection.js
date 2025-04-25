@@ -3,11 +3,12 @@ import ReportSection from "../components/ReportSection";
 import DataTable from "../components/DataTable";
 import InsightsBox from "../components/InsightsBox";
 import { executiveSummaryColumns } from "../data/columnDefinitions";
-import { executiveInsights } from "../data/insightsData";
 import dataService from "../data/dataService";
+import { getGroupedInsightsFromCSV } from "../utils/csvParser";
 
 const ExecutiveSummarySection = () => {
   const [data, setData] = useState([]);
+  const [insights, setInsights] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -16,13 +17,14 @@ const ExecutiveSummarySection = () => {
         const executiveSummaryData =
           await dataService.getExecutiveSummaryData();
         setData(executiveSummaryData);
+        const grouped = await getGroupedInsightsFromCSV();
+        setInsights(grouped.executive || []);
       } catch (error) {
         console.error("Error loading executive summary data:", error);
       } finally {
         setLoading(false);
       }
     };
-
     loadData();
   }, []);
 
@@ -35,11 +37,7 @@ const ExecutiveSummarySection = () => {
           <DataTable columns={executiveSummaryColumns} data={data} />
         )}
       </div>
-      <InsightsBox
-        title="Key Insights"
-        insights={executiveInsights}
-        columns={2}
-      />
+      <InsightsBox title="Key Insights" insights={insights} columns={2} />
     </ReportSection>
   );
 };
