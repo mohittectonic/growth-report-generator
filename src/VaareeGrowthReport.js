@@ -244,6 +244,23 @@ const ComparisonBarChart = ({ data, xAxisKey, colors, bars }) => (
 );
 
 const VaareeGrowthReport = () => {
+  const reportRef = useRef(null);
+  const handleDownloadPdf = () => {
+    const input = reportRef.current;
+    html2canvas(input, { scale: 2 }).then((canvas) => {
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save("Vaaree_Report.pdf");
+    });
+  };
   // Color palette
   const colors = {
     primary: "#4f46e5",
@@ -842,7 +859,10 @@ const VaareeGrowthReport = () => {
 
   // Main render
   return (
-    <div className="p-6 max-w-7xl mx-auto bg-gray-50 min-h-screen">
+    <div
+      ref={reportRef}
+      className="p-6 max-w-7xl mx-auto bg-gray-50 min-h-screen"
+    >
       {/* HEADER */}
       <div className="flex justify-between items-center mb-8 bg-white p-4 rounded-lg shadow">
         <div>
@@ -853,8 +873,16 @@ const VaareeGrowthReport = () => {
             Weekly report for Apr 18 - Apr 24, 2025 | Presented by Tectonic
           </p>
         </div>
-        <div className="bg-white p-2 rounded-lg">
-          <img src="/logo.png" alt="Vaaree Logo" className="h-8" />
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={handleDownloadPdf}
+            className="bg-blue-500 text-white px-4 py-2 rounded"
+          >
+            Download PDF
+          </button>
+          <div className="bg-white p-2 rounded-lg">
+            <img src="/logo.png" alt="Vaaree Logo" className="h-8" />
+          </div>
         </div>
       </div>
 
